@@ -1,9 +1,11 @@
 lib.stdContent >
 lib.stdContent = FLUIDTEMPLATE
 lib.stdContent {
-	file = {$contentelements.view.templateRootPath}Default.html
-	partialRootPath = {$contentelements.view.partialRootPath}
-	layoutRootPath = {$contentelements.view.layoutRootPath}
+
+	templateRootPaths < plugin.tx_contentelements.view.templateRootPaths
+	partialRootPaths < plugin.tx_contentelements.view.partialRootPaths
+	layoutRootPaths < plugin.tx_contentelements.view.layoutRootPaths
+	templateName = Default
 
 	settings {
 		defaultHeaderType = {$content.defaultHeaderType}

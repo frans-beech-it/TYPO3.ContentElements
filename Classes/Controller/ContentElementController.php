@@ -1,34 +1,27 @@
 <?php
 namespace PatrickBroens\Contentelements\Controller;
 
-/***************************************************************
- *  Copyright notice
+/*
+ * This file is part of the TYPO3 CMS project.
  *
- *  (c) 2013 Patrick Broens <patrick@patrickbroens.nl>
+ * It is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, either version 2
+ * of the License, or any later version.
  *
- *  All rights reserved
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
  *
- *  This script is part of the TYPO3 project. The TYPO3 project is
- *  free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  The GNU General Public License can be found at
- *  http://www.gnu.org/copyleft/gpl.html.
- *
- *  This script is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  This copyright notice MUST APPEAR in all copies of the script!
- ***************************************************************/
+ * The TYPO3 project - inspiring people to share!
+ */
 
-use PatrickBroens\Contentelements\Utilities\Transform;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
+use TYPO3\CMS\Extbase\Configuration\FrontendConfigurationManager;
+use PatrickBroens\Contentelements\View\StandaloneView;
+use TYPO3\CMS\Extbase\Utility\ArrayUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
-class ContentElementController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController {
+class ContentElementController {
 
 	/**
 	 * The content object
@@ -45,238 +38,134 @@ class ContentElementController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionC
 	protected $data;
 
 	/**
-	 * A file collection
+	 * The object manager
 	 *
-	 * @var \PatrickBroens\Contentelements\Resource\Collection\FileCollection
-	 * @inject
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
-	protected $fileCollection;
+	public $objectManager;
+
+	/**
+	 * The TypoScript Frontend Controller
+	 *
+	 * @var \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController
+	 */
+	protected $typoScriptFrontendController;
+
+	/**
+	 * The extension configuration
+	 *
+	 * @var array
+	 */
+	protected $configuration;
+
+	/**
+	 * The settings
+	 *
+	 * @var array
+	 */
+	protected $settings;
+
+	/**
+	 * The view
+	 *
+	 * @var \PatrickBroens\Contentelements\View\StandaloneView
+	 */
+	protected $view;
 
 	/**
 	 * Initialization of all actions
 	 *
+	 * @param array $controllerConfiguration The configuration for this controller
 	 * @return void
 	 */
-	public function initializeAction() {
-		$this->contentObject = $this->configurationManager->getContentObject();
+	protected function initializeAction($controllerConfiguration) {
+		$this->contentObject = $this->cObj;
 		$this->data = $this->contentObject->data;
+		$this->objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+		$this->typoScriptFrontendController = $GLOBALS['TSFE'];
+
+		$this->initializeConfiguration($controllerConfiguration);
+		$this->initializeView();
+	}
+
+	/**
+	 * Initialize the configuration
+	 *
+	 * Get the related TypoScript
+	 *
+	 * @param array $controllerConfiguration The configuration for this controller
+	 * @return void
+	 */
+	protected function initializeConfiguration($controllerConfiguration) {
+		$configurationManager = $this->objectManager->get(FrontendConfigurationManager::class);
+		$configurationManager->setContentObject($this->contentObject);
+		$this->configuration = $configurationManager->getConfiguration('contentelements');
+		$this->configuration['controllerConfiguration'] = $controllerConfiguration;
+		$this->settings = $this->configuration['settings'];
+	}
+
+	/**
+	 * Initialize the view
+	 *
+	 * @return void
+	 */
+	protected function initializeView() {
+		$this->view = $this->objectManager->get(StandaloneView::class, $this->contentObject);
+		$this->view->setTemplateRootPaths($this->getRootPaths('templateRootPaths'));
+		$this->view->setLayoutRootPaths($this->getRootPaths('layoutRootPaths'));
+		$this->view->setPartialRootPaths($this->getRootPaths('partialRootPaths'));
+
+		$this->view->setTemplateName($this->configuration['controllerConfiguration']['templateName'] ?: 'Default');
 	}
 
 	/**
 	 * Default action, forward on field "CType"
 	 *
-	 * @return void
+	 * @param string $content Extra content, in this case empty
+	 * @param array $settings The settings for this action
+	 * @return string
+	 * @throws \UnexpectedValueException
 	 */
-	public function renderAction() {
+	public function renderAction($content, array $controllerConfiguration) {
+		$this->initializeAction($controllerConfiguration);
 
-		switch($this->data['CType']) {
-			case 'bullets':
-				$this->forward('bullets');
-				break;
-			case 'menu':
-				$this->forward('menu');
-				break;
-			case 'table':
-				$this->forward('table');
-				break;
-			case 'textmedia':
-				$this->forward('textmedia');
-				break;
-			case 'uploads':
-				$this->forward('uploads');
-				break;
-		}
-	}
-
-	/**
-	 * Action for CE "Bullet list"
-	 *
-	 * The field "bodytext" contains the bullet lines, separated by a line feed.
-	 * It's transformed to an array before sending it to the view.
-	 *
-	 * For a definition list, there is also a second column for the description.
-	 * A definition list will get a multidimensional array.
-	 *
-	 * @return void
-	 */
-	public function bulletsAction() {
-		if ($this->data['bullets_type'] != 2) {
-			$this->data['bullets'] = Transform::linesToArray(
-				$this->data['bodytext']
-			);
-		} else {
-			$this->data['bullets'] = Transform::CsvToArray(
-				$this->data['bodytext'],
-				'|',
-				'',
-				2
-			);
-		}
-
+		$this->view->assign('settings', $this->settings);
 		$this->view->assign('data', $this->data);
+
+		return $this->view->render();
 	}
 
 	/**
-	 * Action for CE "Menu / Sitemap"
+	 * Get root paths (with absolute paths)
 	 *
-	 * The fields "pages" and "selected_categories" contain the selected pages/categories, stored as comma separated values.
-	 * Before sending it to the view they are transformed to an array of integers, instead of a string.
-	 * The values are filtered on removing zero and duplicates.
-	 *
-	 * @return void
+	 * @param $name
+	 * @return array
 	 */
-	public function menuAction() {
-		$this->data['pages'] = array_filter(array_unique(GeneralUtility::intExplode(
-			',',
-			$this->data['pages'],
-			TRUE
-		)));
-		$this->data['selected_categories'] = array_filter(array_unique(GeneralUtility::intExplode(
-			',',
-			$this->data['selected_categories'],
-			TRUE
-		)));
-
-		$this->view->assign('data', $this->data);
+	protected function getRootPaths($name) {
+		$paths = $this->getViewProperty($name);
+		foreach ((array)$paths as $key => $path) {
+			$paths[$key] = GeneralUtility::getFileAbsFileName($path);
+		}
+		return $paths;
 	}
 
 	/**
-	 * Action for CE "Table"
+	 * Handles the path resolving for *rootPath(s)
 	 *
-	 * The table data is stored in the field "bodytext" as a string, where each line, separated by line feed,
-	 * represents a row. By default columns are separated by the delimiter character "vertical line |",
-	 * and can be enclosed (not default), like a regular CSV file.
+	 * numerical arrays get ordered by key ascending
 	 *
-	 * The table data is transformed to a multi dimensional array, taking the delimiter and enclosure into account,
-	 * before it is passed to the view.
-	 *
-	 * @return void
+	 * @param string $setting parameter name from TypoScript
+	 * @return array
 	 */
-	public function tableAction() {
-		$this->data['table'] = array();
-
-		$delimiterCharacterCode = $this->data['table_delimiter'];
-
-		if ($delimiterCharacterCode) {
-			$delimiter = chr(intval($delimiterCharacterCode));
-		} else {
-			$delimiter = '|';
+	protected function getViewProperty($setting) {
+		$values = array();
+		if (
+			!empty($this->configuration['view'][$setting])
+			&& is_array($this->configuration['view'][$setting])
+		) {
+			$values = $this->configuration['view'][$setting];
 		}
 
-		$enclosureCharacterCode = $this->data['table_enclosure'];
-
-		if ($enclosureCharacterCode) {
-			$enclosure = chr(intval($enclosureCharacterCode));
-		} else {
-			$enclosure = '';
-		}
-
-		$this->data['table']['data'] = Transform::CsvToArray(
-			$this->data['bodytext'],
-			$delimiter,
-			$enclosure,
-			$this->data['cols']
-		);
-
-		$this->view->assign('data', $this->data);
-	}
-
-	/**
-	 * Action for CE "Text & Media"
-	 *
-	 * Files are FAL references, the amount mentioned in the field "image".
-	 * The files are collected by these references before sending it to the view.
-	 *
-	 * Sets the gallery position as variables, for better usability in Fluid templates.
-	 *
-	 * @return void
-	 */
-	public function textmediaAction() {
-		$fileRepository = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Resource\FileRepository::class);
-		$fileObjects = $fileRepository->findByRelation('tt_content', 'image', $this->data['uid']);
-
-		$this->data['media'] = $fileObjects;
-
-		$this->galleryPosition();
-		$this->galleryWidth();
-
-		$this->view->assign('data', $this->data);
-	}
-
-	/**
-	 * Action for the CE "File links"
-	 *
-	 * Gets all file objects before passing it to the view.
-	 *
-	 * @return void
-	 */
-	public function uploadsAction() {
-		$fileObjects = $this->fileCollection->getAllSorted(
-			'',
-			$this->data['media_fileReferenceUids'],
-			$this->data['file_collections'],
-			$this->data['select_key'],
-			$this->data['filelink_sorting']
-		);
-
-		$this->data['files'] = $fileObjects;
-
-		$this->view->assign('data', $this->data);
-	}
-
-	/**
-	 * Define the gallery position, based on field "imageorient"
-	 *
-	 * Gallery has a horizontal and a vertical position towards the text
-	 * and a possible wrapping of the text around the gallery.
-	 *
-	 * @return void
-	 */
-	protected function galleryPosition() {
-		$galleryPosition = array(
-			'horizontal' => array(
-				'center' => array(0, 8),
-				'right' => array(1, 9, 17, 25),
-				'left' => array(2, 10, 18, 26)
-			),
-			'vertical' => array(
-				'above' => array(0, 1, 2),
-				'intext' => array(17, 18, 25, 26),
-				'below' => array(8, 9, 10)
-			)
-		);
-
-		foreach ($galleryPosition as $positionDirectionKey => $positionDirectionValue) {
-			foreach ($positionDirectionValue as $positionKey => $positionArray) {
-				if (in_array($this->data['imageorient'], $positionArray)) {
-					$this->data['galleryPosition'][$positionDirectionKey] = $positionKey;
-				}
-			}
-		}
-
-		if (in_array($this->data['imageorient'], array(25, 26))) {
-			$this->data['galleryPosition']['noWrap'] = TRUE;
-		}
-	}
-
-	/**
-	 * Set the gallery width based on vertical position and register settings
-	 *
-	 * @return void
-	 */
-	protected function galleryWidth() {
-		if ($this->data['galleryPosition']['vertical'] === 'intext') {
-			if ($GLOBALS['TSFE']->register['maxImageWidthInText']) {
-				$this->data['galleryWidth'] = $GLOBALS['TSFE']->register['maxImageWidthInText'];
-			} else {
-				$this->data['galleryWidth'] = $this->settings['media']['gallery']['maximumImageWidthInText'];
-			}
-		} else {
-			if ($GLOBALS['TSFE']->register['maxImageWidth']) {
-				$this->data['galleryWidth'] = $GLOBALS['TSFE']->register['maxImageWidth'];
-			} else {
-				$this->data['galleryWidth'] = $this->settings['media']['gallery']['maximumImageWidth'];
-			}
-		}
+		return $values;
 	}
 }

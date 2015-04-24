@@ -1,8 +1,8 @@
 plugin.tx_contentelements {
 	view {
-		file = {$contentelements.view.templateRootPath}Default.html
-		partialRootPath = {$contentelements.view.partialRootPath}
-		layoutRootPath = {$contentelements.view.layoutRootPath}
+		templateRootPaths.1 = {$contentelements.view.templateRootPath}
+		partialRootPaths.1 = {$contentelements.view.partialRootPath}
+		layoutRootPaths.1 = {$contentelements.view.layoutRootPath}
 	}
 	settings {
 		media {

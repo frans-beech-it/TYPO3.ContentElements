@@ -15,62 +15,42 @@ tt_content {
 	}
 	bullets < lib.userContent
 	bullets {
-		switchableControllerActions {
-			ContentElement {
-				1 = bullets
-			}
-		}
+		templateName = Bullets
 	}
 	div < lib.stdContent
 	div {
-		file = {$contentelements.view.templateRootPath}Div.html
+		templateName = Div
 	}
 	header < lib.stdContent
 	header {
-		file = {$contentelements.view.templateRootPath}Header.html
+		templateName = Header
 	}
 	html < lib.stdContent
 	html {
-		file = {$contentelements.view.templateRootPath}Html.html
+		templateName = Html
 	}
 	list < lib.stdContent
 	list {
-		file = {$contentelements.view.templateRootPath}List.html
+		templateName = List
 	}
 	menu < lib.userContent
 	menu {
-		switchableControllerActions {
-			ContentElement {
-				1 = menu
-			}
-		}
+		templateName = Menu
 	}
 	shortcut < lib.stdContent
 	shortcut {
-		file = {$contentelements.view.templateRootPath}Shortcut.html
+		templateName = Shortcut
 	}
 	table < lib.userContent
 	table {
-		switchableControllerActions {
-			ContentElement {
-				1 = table
-			}
-		}
+		templateName = Table
 	}
 	textmedia < lib.userContent
 	textmedia {
-		switchableControllerActions {
-			ContentElement {
-				1 = textmedia
-			}
-		}
+		templateName = Textmedia
 	}
 	uploads < lib.userContent
 	uploads {
-		switchableControllerActions {
-			ContentElement {
-				1 = uploads
-			}
-		}
+		templateName = Uploads
 	}
 }

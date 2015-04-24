@@ -31,3 +31,8 @@ if(is_array($extensionConfiguration)) {
 		);
 	}
 }
+
+	// Override FluidTemplateContentObject
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects']['TYPO3\\CMS\\Frontend\\ContentObject\\FluidTemplateContentObject'] = array(
+	'className' => 'PatrickBroens\\Contentelements\\ContentObject\\FluidTemplateContentObject'
+);
