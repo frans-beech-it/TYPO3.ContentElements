@@ -65,9 +65,9 @@
 <f:section name="imageType">
 	<f:if condition="{column.media.link}">
 		<f:then>
-			<f:link.typolink parameter="{column.media.link}">
+			<ce:link.typolink parameter="{column.media.link}">
 				<f:render section="media" arguments="{_all}" />
-			</f:link.typolink>
+			</ce:link.typolink>
 		</f:then>
 		<f:else>
 			<f:if condition="{data.image_zoom}">
