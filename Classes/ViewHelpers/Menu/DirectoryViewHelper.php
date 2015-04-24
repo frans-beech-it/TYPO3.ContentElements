@@ -79,6 +79,9 @@ class DirectoryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
 		// If no pages have been defined, use the current page
 		if (empty($pageUids)) {
 			if ($entryLevel !== NULL) {
+				if ($entryLevel < 0) {
+					$entryLevel = count($GLOBALS['TSFE']->tmpl->rootLine) - 1 + $entryLevel;
+				}
 				$pageUids = array($GLOBALS['TSFE']->tmpl->rootLine[$entryLevel]['uid']);
 			} else {
 				$pageUids = array($GLOBALS['TSFE']->id);
