@@ -13,43 +13,43 @@ tt_content {
 	key {
 		field = CType
 	}
-	bullets < lib.userContent
+	bullets =< lib.userContent
 	bullets {
 		templateName = Bullets
 	}
-	div < lib.stdContent
+	div =< lib.stdContent
 	div {
 		templateName = Div
 	}
-	header < lib.stdContent
+	header =< lib.stdContent
 	header {
 		templateName = Header
 	}
-	html < lib.stdContent
+	html =< lib.stdContent
 	html {
 		templateName = Html
 	}
-	list < lib.stdContent
+	list =< lib.stdContent
 	list {
 		templateName = List
 	}
-	menu < lib.userContent
+	menu =< lib.userContent
 	menu {
 		templateName = Menu
 	}
-	shortcut < lib.stdContent
+	shortcut =< lib.stdContent
 	shortcut {
 		templateName = Shortcut
 	}
-	table < lib.userContent
+	table =< lib.userContent
 	table {
 		templateName = Table
 	}
-	textmedia < lib.userContent
+	textmedia =< lib.userContent
 	textmedia {
 		templateName = Textmedia
 	}
-	uploads < lib.userContent
+	uploads =< lib.userContent
 	uploads {
 		templateName = Uploads
 	}
