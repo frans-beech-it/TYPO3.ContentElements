@@ -14,7 +14,7 @@ namespace PatrickBroens\Contentelements\Hooks\ContentElementRenderer;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Core\Utility\ArrayUtility;
+use PatrickBroens\Contentelements\Utilities\ArrayUtility;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 use PatrickBroens\Contentelements\Controller\ContentElementController;
 

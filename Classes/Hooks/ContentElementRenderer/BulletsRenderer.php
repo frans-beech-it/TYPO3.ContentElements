@@ -14,7 +14,7 @@ namespace PatrickBroens\Contentelements\Hooks\ContentElementRenderer;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Core\Utility\ArrayUtility;
+use PatrickBroens\Contentelements\Utilities\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 use PatrickBroens\Contentelements\Controller\ContentElementController;
@@ -47,7 +47,7 @@ class BulletsRenderer extends AbstractContentElementRenderer {
 		StandaloneView $view,
 		ContentElementController $controller
 	) {
-		if ($data['bullets_type'] != 2) {
+		if ((int)$data['bullets_type'] !== 2) {
 			$data['bullets'] = GeneralUtility::trimExplode(LF, $data['bodytext']);
 		} else {
 			$data['bullets'] = ArrayUtility::csvToArray(
