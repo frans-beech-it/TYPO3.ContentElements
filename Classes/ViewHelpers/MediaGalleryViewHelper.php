@@ -134,6 +134,7 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 	 * @param boolean $border TRUE when border in use
 	 * @param integer $borderWidth Width of the border
 	 * @param integer $borderPadding Padding between border and media element
+	 * @return string
 	 */
 	public function render(
 		$as,
@@ -148,6 +149,9 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 		$borderWidth = 1,
 		$borderPadding = 0
 	) {
+		if(!is_array($references)){
+			return '';
+		}
 		$this->fileObjects = $references;
 		$this->fileCount = count($this->fileObjects);
 
@@ -320,13 +324,6 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 				if($mediaWidth > $fileObject->getProperty('width')){
 					$mediaWidth = $fileObject->getProperty('width');
 				}
-				$mediaHeight = floor(
-					$fileObject->getProperty('height') * ($mediaWidth / $fileObject->getProperty('width'))
-				);
-				$this->mediaDimensions[$key] = array(
-					'width' => 	$mediaWidth,
-					'height' => $mediaHeight
-				);
 			}
 
 			$this->calculatedWidth =  $galleryWidth;
