@@ -120,13 +120,13 @@ class TextMediaRenderer extends AbstractContentElementRenderer {
 	protected function galleryWidth(array &$data, array $settings) {
 		if ($data['galleryPosition']['vertical'] === 'intext') {
 			if ($this->typoScriptFrontendController->register['maxImageWidthInText']) {
-				$data['galleryWidth'] = $this->controller->typoScriptFrontendController->register['maxImageWidthInText'];
+				$data['galleryWidth'] = $this->typoScriptFrontendController->register['maxImageWidthInText'];
 			} else {
 				$data['galleryWidth'] = $settings['media']['gallery']['maximumImageWidthInText'];
 			}
 		} else {
 			if ($this->typoScriptFrontendController->register['maxImageWidth']) {
-				$data['galleryWidth'] = $this->controller->typoScriptFrontendController->register['maxImageWidth'];
+				$data['galleryWidth'] = $this->typoScriptFrontendController->register['maxImageWidth'];
 			} else {
 				$data['galleryWidth'] = $settings['media']['gallery']['maximumImageWidth'];
 			}
