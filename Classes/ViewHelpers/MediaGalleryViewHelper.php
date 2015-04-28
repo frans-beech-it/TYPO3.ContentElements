@@ -24,6 +24,8 @@ namespace PatrickBroens\Contentelements\ViewHelpers;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+use TYPO3\CMS\Core\Resource\FileInterface;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * A view helper which returns a media gallery
@@ -185,10 +187,10 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 	 */
 	protected function calculateRowsAndColumns($columnAmount = 1, $rowAmount = 0) {
 
-			// If no columns defined, set it to 1
+		// If no columns defined, set it to 1
 		$columns = (integer) $columnAmount > 1 ? (integer) $columnAmount : 1;
 
-			// When more columns than media elements, set the columns to the amount of media elements
+		// When more columns than media elements, set the columns to the amount of media elements
 		if ($columns > $this->fileCount) {
 			$columns = $this->fileCount;
 		}
@@ -197,13 +199,13 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 			$columns = 1;
 		}
 
-			// Calculate the rows from the amount of files and the columns
+		// Calculate the rows from the amount of files and the columns
 		$rows = ceil($this->fileCount / $columns);
 
-			// Get the amount of rows from input
+		// Get the amount of rows from input
 		$rowsDefined = intval($rowAmount);
 
-			// If the rows are defined in input, the columns need to be recalculated
+		// If the rows are defined in input, the columns need to be recalculated
 		if ($rowsDefined > 1) {
 			$rows = $rowsDefined;
 			if ($rows > $this->fileCount) {
@@ -226,13 +228,13 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 	 * Based on the width of the gallery, defined equal width or height by a user, the spacing between columns and
 	 * the use of a border, defined by user, where the border width and padding are taken into account
 	 *
-	 * @param integer $width The width of the gallery
-	 * @param integer $equalMediaHeight Predefined height of the images
-	 * @param integer $equalImageWidth Predefined width of the images
-	 * @param integer $columnSpacing Spacing between the columns
-	 * @param boolean $border TRUE when border in use
-	 * @param integer $borderWidth Width of the border
-	 * @param integer $borderPadding Padding between border and image
+	 * @param int $width The width of the gallery
+	 * @param int $equalMediaHeight Predefined height of the images
+	 * @param int $equalMediaWidth Predefined width of the images
+	 * @param int $columnSpacing Spacing between the columns
+	 * @param int $border TRUE when border in use
+	 * @param int $borderWidth Width of the border
+	 * @param int $borderPadding Padding between border and image
 	 * @return void
 	 */
 	protected function calculateMediaWidthsAndHeights(
@@ -244,7 +246,7 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 		$borderWidth,
 		$borderPadding
 	) {
-		$galleryWidth = $this->definedWidth = intval($width);
+		$galleryWidth = $this->definedWidth = (int)$width ?: 100;
 
 		$this->borderInUse = (boolean) $border;
 
@@ -258,12 +260,12 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 			$galleryWidthMinusBorderAndSpacing = $galleryWidthMinusBorderAndSpacing - $borderPaddingTotal - $borderWidthTotal;
 		}
 
-			// User entered a predefined height
+		// User entered a predefined height
 		if ($equalMediaHeight) {
 			$mediaScalingCorrection = 1;
 			$maximumRowWidth = 0;
 
-				// Calculate the scaling correction when the total of media elements is wider than the gallery width
+			// Calculate the scaling correction when the total of media elements is wider than the gallery width
 			for ($row = 1; $row <= $this->rows; $row++) {
 				$totalRowWidth = 0;
 				for ($column = 1; $column <= $this->columns; $column++) {
@@ -279,11 +281,12 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 				$mediaScalingCorrection = max($mediaInRowScaling, $mediaScalingCorrection);
 			}
 
-				// Set the corrected dimensions for each media element
+			// Set the corrected dimensions for each media element
 			foreach ($this->fileObjects as $key => $fileObject) {
 				$mediaHeight = floor($equalMediaHeight / $mediaScalingCorrection);
+				list($width, $height) = $this->getFileDimensions($fileObject, NULL, $mediaHeight);
 				$mediaWidth = floor(
-					$fileObject->getProperty('width') * ($mediaHeight / $fileObject->getProperty('height'))
+					$width * ($mediaHeight / $height)
 				);
 				$this->mediaDimensions[$key] = array(
 					'width' => 	$mediaWidth,
@@ -297,16 +300,17 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 		} elseif ($equalMediaWidth) {
 			$mediaScalingCorrection = 1;
 
-				// Calculate the scaling correction when the total of media elements is wider than the gallery width
+			// Calculate the scaling correction when the total of media elements is wider than the gallery width
 			$totalRowWidth = $this->columns * $equalMediaWidth;
 			$mediaInRowScaling = $totalRowWidth / $galleryWidthMinusBorderAndSpacing;
 			$mediaScalingCorrection = max($mediaInRowScaling, $mediaScalingCorrection);
 
-				// Set the corrected dimensions for each media element
+			// Set the corrected dimensions for each media element
 			foreach ($this->fileObjects as $key => $fileObject) {
 				$mediaWidth = floor($equalMediaWidth / $mediaScalingCorrection);
+				list($width, $height) = $this->getFileDimensions($fileObject, $mediaWidth);
 				$mediaHeight = floor(
-					$fileObject->getProperty('height') * ($mediaWidth / $fileObject->getProperty('width'))
+					$height * ($mediaWidth / $width)
 				);
 				$this->mediaDimensions[$key] = array(
 					'width' => 	$mediaWidth,
@@ -321,9 +325,18 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 			$mediaWidth = intval($galleryWidthMinusBorderAndSpacing / $this->columns);
 
 			foreach ($this->fileObjects as $key => $fileObject) {
-				if($mediaWidth > $fileObject->getProperty('width')){
-					$mediaWidth = $fileObject->getProperty('width');
+				$tmpMediaWidth = $mediaWidth;
+				list($width, $height) = $this->getFileDimensions($fileObject, $mediaWidth);
+				if($mediaWidth > $width){
+					$mediaWidth = $width;
 				}
+				$mediaHeight = floor(
+					$height * ($mediaWidth / $width)
+				);
+				$this->mediaDimensions[$key] = array(
+					'width' => 	$tmpMediaWidth,
+					'height' => $mediaHeight
+				);
 			}
 
 			$this->calculatedWidth =  $galleryWidth;
@@ -364,5 +377,32 @@ class MediaGalleryViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 		}
 
 		return $gallery;
+	}
+
+	/**
+	 * Get file dimensions
+	 *
+	 * @param FileInterface $fileObject
+	 * @param int $baseWidth base for calculating height by ratio
+	 * @param int $baseHeight base for calculating width by ratio
+	 * @return array
+	 */
+	protected function getFileDimensions(FileInterface $fileObject, $baseWidth = NULL, $baseHeight = NULL) {
+		$width = (int)$fileObject->getProperty('width');
+		$height = (int)$fileObject->getProperty('height');
+
+		if ($width === 0 && $height === 0) {
+			// todo: get default ratio from settings
+			$ratio = (4/3);
+			if ($baseWidth !== NULL) {
+				$width = $baseWidth;
+				$height = $width / $ratio;
+			} else {
+				$height = (int)$baseHeight;
+				$width = $height * $ratio;
+			}
+		}
+
+		return array($width, $height);
 	}
 }
