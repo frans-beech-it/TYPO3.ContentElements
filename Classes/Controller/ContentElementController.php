@@ -14,6 +14,7 @@ namespace PatrickBroens\Contentelements\Controller;
  * The TYPO3 project - inspiring people to share!
  */
 
+use PatrickBroens\Contentelements\Hooks\ContentElementRenderer\ContentElementRendererHookInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Extbase\Configuration\FrontendConfigurationManager;
@@ -128,6 +129,21 @@ class ContentElementController {
 	 */
 	public function renderAction($content, array $controllerConfiguration) {
 		$this->initializeAction($controllerConfiguration);
+
+		if (isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['frontend']['contentelements'][$this->data['CType']])) {
+			$className = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['frontend']['contentelements'][$this->data['CType']];
+			$hookObject = GeneralUtility::getUserObj($className);
+
+			if (!$hookObject instanceof ContentElementRendererHookInterface) {
+				throw new \UnexpectedValueException(
+					'$hookObject must implement interface ' .
+					ContentElementRendererHookInterface::class,
+					1427455377
+				);
+			}
+
+			$hookObject->render($this->data, $this->configuration, $this->settings, $this->view, $this);
+		}
 
 		$this->view->assign('settings', $this->settings);
 		$this->view->assign('data', $this->data);

@@ -1,6 +1,6 @@
 {namespace ce=PatrickBroens\Contentelements\ViewHelpers}
 
-<div id="c{data.uid}" {f:if(condition: data.layout, then: 'class="ce-layout-{data.layout}"')}>
+<div id="c{data.uid}" {ce:attribute.class(names: {0: '{ce:format.layoutClass(key: \'{data.layout}\')}', 1: '{ce:format.behaviourClasses(keys: \'{data.behaviour}\', mapping: \'{settings.behaviour.classNameMapping}\')}'})}>
 
 	<f:if condition="{data.galleryPosition.noWrap} != 1">
 		<f:render partial="Header" arguments="{_all}" />
@@ -29,6 +29,3 @@
 
 	<f:render partial="Footer" arguments="{_all}" />
 </div>
-
-
-
