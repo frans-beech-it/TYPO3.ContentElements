@@ -92,7 +92,7 @@ class IfViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionVie
 	/**
 	 * Render the view helper
 	 *
-	 * @param boolean $condition The condition
+	 * @param bool $condition The condition
 	 * @param array $or Array with OR condition strings
 	 * @param array $and Array with AND condition strings
 	 * @return string
@@ -101,16 +101,16 @@ class IfViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionVie
 		$content = '';
 		if (!empty($or)) {
 			if (!empty($and)) {
-				if (($this->isConditionValid($condition) && $this->isAndValid($and)) || $this->isOrValid($or)) {
+				if (($condition && $this->isAndValid($and)) || $this->isOrValid($or)) {
 					$content =  $this->renderThenChild();
 				}
 			} else {
-				if ($this->isConditionValid($condition) || $this->isOrValid($or)) {
+				if ($condition || $this->isOrValid($or)) {
 					$content =  $this->renderThenChild();
 				}
 			}
 		} elseif (!empty($and)) {
-			if ($this->isConditionValid($condition) && $this->isAndValid($and)) {
+			if ($condition && $this->isAndValid($and)) {
 				$content =  $this->renderThenChild();
 			}
 		} elseif ($condition) {
@@ -123,26 +123,12 @@ class IfViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionVie
 	}
 
 	/**
-	 * Evaluate the condition parameter
-	 *
-	 * @param $condition The condition
-	 * @return bool
-	 */
-	protected function isConditionValid($condition) {
-		if ($condition) {
-			return TRUE;
-		}
-
-		return FALSE;
-	}
-
-	/**
 	 * Evaluate all conditions within the "or" parameter with OR
 	 *
-	 * @param $conditions The conditions
+	 * @param array $conditions The conditions
 	 * @return bool|null
 	 */
-	protected function isOrValid($conditions) {
+	protected function isOrValid(array $conditions) {
 		if (!empty($conditions)) {
 			$result = FALSE;
 
@@ -167,10 +153,10 @@ class IfViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionVie
 	/**
 	 * Evaluate all conditions within the "and" parameter with AND
 	 *
-	 * @param $conditions The conditions
+	 * @param array $conditions The conditions
 	 * @return bool|null
 	 */
-	protected function isAndValid($conditions) {
+	protected function isAndValid(array $conditions) {
 		if (!empty($conditions)) {
 			$result = TRUE;
 

@@ -28,7 +28,29 @@ namespace PatrickBroens\Contentelements\Domain\Repository;
 /**
  * A repository for content
  */
-class ContentRepository extends AbstractRepository {
+class ContentRepository {
+
+	/**
+	 * The database connection
+	 *
+	 * @var \TYPO3\CMS\Core\Database\DatabaseConnection
+	 */
+	protected $databaseConnection;
+
+	/**
+	 * The TypoScript Frontend Controller
+	 *
+	 * @var \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController
+	 */
+	protected $typoScriptFrontendController;
+
+	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$this->databaseConnection = $GLOBALS['TYPO3_DB'];
+		$this->typoScriptFrontendController = $GLOBALS['TSFE'];
+	}
 
 	/**
 	 * Find content with 'Show in Section Menus' enabled in a page
@@ -42,41 +64,37 @@ class ContentRepository extends AbstractRepository {
 	 * (and a non-empty 'header' field!) is selected.
 	 * In other words, if the header layout of an element is set to 'Hidden' then the page will not appear in the menu.
 	 *
-	 * @param array $pageUid The page uid's
+	 * @param int $pageUid The page uid
 	 * @param string $type Search method
-	 * @param integer $column Restrict content by the column number
-	 * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
+	 * @param int $column Restrict content by the column number
+	 * @return bool|\mysqli_result|object MySQLi result object / DBAL object
 	 */
 	public function findBySection($pageUid, $type = '', $column = 0) {
-		$query = $this->createQuery();
-
 		$constraints = array(
-			$query->equals('pid', $pageUid),
-			$query->equals('columnPosition', $column)
+			'pid = ' . $pageUid,
+			'colPos = ' . $column,
+			'sys_language_uid = ' . $this->typoScriptFrontendController->sys_language_content
 		);
 
-		switch($type) {
+		switch ($type) {
 			case 'all':
 				break;
 			case 'header':
-				$constraints[] = $query->equals('showInSectionMenus', 1);
-				$constraints[] = $query->logicalNot(
-					$query->equals('header', '')
-				);
-				$constraints[] = $query->logicalNot(
-					$query->equals('headerLayout', 100)
-				);
+				$constraints[] = 'sectionIndex = 1';
+				$constraints[] = 'header != \'\'';
+				$constraints[] = 'header_layout != 100';
 				break;
 			default:
-				$constraints[] = $query->equals('showInSectionMenus', 1);
+				$constraints[] = 'sectionIndex = 1';
 		}
 
-		$query->matching(
-			$query->logicalAnd(
-				$constraints
-			)
-		);
+		$whereStatement = implode(' AND ', $constraints);
+		$whereStatement .= $this->typoScriptFrontendController->sys_page->enableFields('tt_content', FALSE, array());
 
-		return $query->execute();
+		return $this->databaseConnection->exec_SELECTgetRows(
+			'*',
+			'tt_content',
+			$whereStatement
+		);
 	}
 }

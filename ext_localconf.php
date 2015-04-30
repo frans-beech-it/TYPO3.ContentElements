@@ -57,6 +57,10 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['frontend']['contentelements']['textme
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['frontend']['contentelements']['uploads'] =
 	\PatrickBroens\Contentelements\Hooks\ContentElementRenderer\UploadsRenderer::class;
 
+	// Override PageRepository
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects']['TYPO3\\CMS\\Frontend\\Page\\PageRepository'] = array(
+	'className' => 'PatrickBroens\\Contentelements\\Page\\PageRepository'
+);
 	// Override FluidTemplateContentObject
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects']['TYPO3\\CMS\\Frontend\\ContentObject\\FluidTemplateContentObject'] = array(
 	'className' => 'PatrickBroens\\Contentelements\\ContentObject\\FluidTemplateContentObject'

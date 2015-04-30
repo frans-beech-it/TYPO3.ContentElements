@@ -25,6 +25,8 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Link;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use PatrickBroens\Contentelements\ViewHelpers\AbstractFrontendViewHelper;
+
 /**
  * A view helper for creating a link for an image popup.
  *
@@ -38,14 +40,14 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Link;
  * <a href="url" onclick="javascript" target="thePicture"><img src=""></a>
  * </output>
  */
-
-class ClickEnlargeViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
+class ClickEnlargeViewHelper extends AbstractFrontendViewHelper {
 
 	/**
 	 * Render the view helper
 	 *
 	 * @param string|\TYPO3\CMS\Core\Resource\File|\TYPO3\CMS\Core\Resource\FileReference $image The original image file
 	 * @param array $configuration The configuration for the popup
+	 * @return string
 	 */
 	public function render(
 		$image,
@@ -55,6 +57,6 @@ class ClickEnlargeViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 
 		$configuration['enable'] = TRUE;
 
-		return $GLOBALS['TSFE']->cObj->imageLinkWrap($content, $image, $configuration);
+		return $this->contentObject->imageLinkWrap($content, $image, $configuration);
 	}
 }

@@ -80,13 +80,15 @@ class HxViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractTagBasedView
 	/**
 	 * Render the view helper
 	 *
-	 * @param integer $type Type of header
-	 * @param integer $defaultType Default type if no type is given
-	 * @param boolean $subheader Is subheader
+	 * @param string $type Type of header
+	 * @param int $defaultType Default type if no type is given
+	 * @param bool $subheader Is subheader
 	 * @return string Rendered Hx
 	 */
-	public function render($type = 0, $defaultType = 0, $subheader = FALSE) {
-		if ($type == 100) {
+	public function render($type = '0', $defaultType = 0, $subheader = FALSE) {
+		$type = (int)$type;
+
+		if ($type === 100) {
 			return '';
 		}
 
@@ -101,15 +103,15 @@ class HxViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractTagBasedView
 	/**
 	 * Define the tag name
 	 *
-	 * @param $type Type of header
-	 * @param $defaultType Default type if no type is given
-	 * @param $subheader Is subheader
+	 * @param int $type Type of header
+	 * @param int $defaultType Default type if no type is given
+	 * @param bool $subheader Is subheader
 	 * @return void
 	 */
 	protected function defineTagName($type, $defaultType, $subheader) {
 		if (!empty($type)) {
 			$this->type = $type;
-		} elseif(!empty($defaultType)) {
+		} elseif (!empty($defaultType)) {
 			$this->type = $defaultType;
 		}
 

@@ -44,21 +44,7 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu;
  * Recently updated subpage 3
  * </output>
  */
-class UpdatedViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
-
-	/**
-	 * The page repository
-	 *
-	 * @var \PatrickBroens\Contentelements\Domain\Repository\PageRepository
-	 * @inject
-	 */
-	protected $pageRepository;
-
-	/**
-	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
-	 * @inject
-	 */
-	protected $configurationManager;
+class UpdatedViewHelper extends AbstractMenuViewHelper {
 
 	/**
 	 * Render the view helper
@@ -66,8 +52,8 @@ class UpdatedViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHel
 	 * @param string $as The name of the iteration variable
 	 * @param array $pageUids The page uids of the parent pages
 	 * @param string $maximumAge The maximum age of the pages
-	 * @param boolean $excludeNoSearchPages Exclude pages with field 'Exclude in search' disabled
-	 * @param boolean $includeNotInMenu Should pages which are hidden for menu's be included
+	 * @param bool $excludeNoSearchPages Exclude pages with field 'Exclude in search' disabled
+	 * @param bool $includeNotInMenu Should pages which are hidden for menu's be included
 	 * @return string
 	 */
 	public function render(
@@ -79,12 +65,10 @@ class UpdatedViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHel
 	) {
 		// If no pages have been defined, use the current page
 		if (empty($pageUids)) {
-			$pageUids = array($GLOBALS['TSFE']->page['uid']);
+			$pageUids = array($this->typoScriptFrontendController->page['uid']);
 		}
 
-		$contentObject = $this->configurationManager->getContentObject();
-
-		$minimumTimeStamp = time() - intval($contentObject->calc($maximumAge));
+		$minimumTimeStamp = time() - (int)$this->contentObject->calc($maximumAge);
 
 		$unfilteredPageTreeUids = array();
 		foreach ($pageUids as $pageUid) {
@@ -92,15 +76,26 @@ class UpdatedViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHel
 				$unfilteredPageTreeUids,
 				explode(
 					',',
-					$contentObject->getTreeList($pageUid, 20)
+					$this->contentObject->getTreeList($pageUid, 20)
 				)
 			);
 		}
 		$pageTreeUids = array_unique($unfilteredPageTreeUids);
 
-		$this->pageRepository->setIncludeNotInMenu($includeNotInMenu);
+		$constraints = $this->getPageConstraints();
 
-		$pages = $this->pageRepository->findByMinimumTimestamp($pageTreeUids, $minimumTimeStamp, $excludeNoSearchPages);
+		if ($excludeNoSearchPages) {
+			$constraints .= ' AND no_search = 0';
+		}
+
+		$constraints .= ' AND tstamp >=' . $minimumTimeStamp;
+
+		$pages = $this->pageRepository->getMenu(
+			$pageTreeUids,
+			'*',
+			'',
+			$constraints
+		);
 
 		$this->templateVariableContainer->add($as, $pages);
 		$output = $this->renderChildren();

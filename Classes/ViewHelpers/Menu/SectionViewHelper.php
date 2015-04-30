@@ -53,34 +53,20 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu;
  * Content element 3 in page with uid = 1 and "Show in section menu's" enabled
  * </output>
  */
-class SectionViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
-
-	/**
-	 * The content repository
-	 *
-	 * @var \PatrickBroens\Contentelements\Domain\Repository\ContentRepository
-	 * @inject
-	 */
-	protected $contentRepository;
-
-	/**
-	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
-	 * @inject
-	 */
-	protected $configurationManager;
+class SectionViewHelper extends AbstractMenuViewHelper {
 
 	/**
 	 * Render the view helper
 	 *
 	 * @param string $as The name of the iteration variable
-	 * @param integer $pageUid The page
+	 * @param int $pageUid The page
 	 * @param string $type Search method
-	 * @param integer $column Restrict content by the column number
+	 * @param int $column Restrict content by the column number
 	 * @return string
 	 */
 	public function render($as, $pageUid = NULL, $type = '', $column = 0) {
 		if (empty($pageUid)) {
-			$pageUid = $GLOBALS['TSFE']->id;
+			$pageUid = $this->typoScriptFrontendController->id;
 		}
 
 		if (!empty($type) && !in_array($type, array('all', 'header'))) {

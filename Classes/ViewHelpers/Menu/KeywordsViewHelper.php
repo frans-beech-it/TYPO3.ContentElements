@@ -44,21 +44,7 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu;
  * Page with the keyword "typo3"
  * </output>
  */
-class KeywordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
-
-	/**
-	 * The page repository
-	 *
-	 * @var \PatrickBroens\Contentelements\Domain\Repository\PageRepository
-	 * @inject
-	 */
-	protected $pageRepository;
-
-	/**
-	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
-	 * @inject
-	 */
-	protected $configurationManager;
+class KeywordsViewHelper extends AbstractMenuViewHelper {
 
 	/**
 	 * Render the view helper
@@ -66,8 +52,8 @@ class KeywordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 	 * @param string $as The name of the iteration variable
 	 * @param array $pageUids The page uids of the pages with the keywords
 	 * @param mixed $keywords The keywords to search for
-	 * @param boolean $excludeNoSearchPages Exclude pages with field 'Exclude in search' disabled
-	 * @param boolean $includeNotInMenu Should pages which are hidden for menu's be included
+	 * @param bool $excludeNoSearchPages Exclude pages with field 'Exclude in search' disabled
+	 * @param bool $includeNotInMenu Should pages which are hidden for menu's be included
 	 * @return string
 	 */
 	public function render(
@@ -79,12 +65,8 @@ class KeywordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 	) {
 		// If no pages have been defined, use the current page
 		if (empty($pageUids)) {
-			$pageUids = array($GLOBALS['TSFE']->page['uid']);
+			$pageUids = array($this->typoScriptFrontendController->page['uid']);
 		}
-
-		$this->pageRepository->setIncludeNotInMenu($includeNotInMenu);
-
-		$contentObject = $this->configurationManager->getContentObject();
 
 		// Transform the keywords list into an array
 		if (!is_array($keywords)) {
@@ -96,13 +78,13 @@ class KeywordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 		$unfilteredPageTreeUids = array();
 
 		foreach ($pageUids as $pageUid) {
-			$page = $this->pageRepository->findByUid($pageUid);
+			$page = $this->pageRepository->getPage($pageUid);
 
 			// Use the keywords of the page when none has been given
 			if (empty($keywords)) {
 				$unfilteredKeywords = array_merge(
 					$unfilteredKeywords,
-					$this->keywordsToArray($page->getKeywords())
+					$this->keywordsToArray($page['keywords'])
 				);
 			}
 
@@ -111,7 +93,7 @@ class KeywordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 				$unfilteredPageTreeUids,
 				explode(
 					',',
-					$contentObject->getTreeList($pageUid, 20)
+					$this->contentObject->getTreeList($pageUid, 20)
 				)
 			);
 		}
@@ -119,7 +101,26 @@ class KeywordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 		$pageTreeUids = array_unique($unfilteredPageTreeUids);
 		$filteredKeywords = array_unique($unfilteredKeywords);
 
-		$pages = $this->pageRepository->findByKeywords($pageTreeUids, $filteredKeywords, $excludeNoSearchPages);
+		$constraints = $this->getPageConstraints();
+
+		if ($excludeNoSearchPages) {
+			$constraints .= ' AND no_search = 0';
+		}
+
+		$keywordConstraints = array();
+		if ($filteredKeywords) {
+			foreach ($filteredKeywords as $keyword) {
+				$keywordConstraints[] = 'keywords LIKE(\'%' . $keyword . '%\')';
+			}
+			$constraints .= ' AND (' . implode(' OR ', $keywordConstraints) . ')';
+		}
+
+		$pages = $this->pageRepository->getMenuList(
+			$pageTreeUids,
+			'*',
+			'',
+			$constraints
+		);
 
 		$this->templateVariableContainer->add($as, $pages);
 		$output = $this->renderChildren();

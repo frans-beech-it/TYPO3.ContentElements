@@ -25,6 +25,8 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu\Categories;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use PatrickBroens\Contentelements\ViewHelpers\Menu\AbstractMenuViewHelper;
+
 /**
  * A view helper which returns pages with assigned categories
  *
@@ -43,15 +45,7 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu\Categories;
  * Page with category 1 and 2 assigned
  * </output>
  */
-class PagesViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
-
-	/**
-	 * The page repository
-	 *
-	 * @var \PatrickBroens\Contentelements\Domain\Repository\PageRepository
-	 * @inject
-	 */
-	protected $pageRepository;
+class PagesViewHelper extends AbstractMenuViewHelper {
 
 	/**
 	 * Render the view helper
@@ -59,7 +53,7 @@ class PagesViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelpe
 	 * @param array $categoryUids The categories assigned to the pages
 	 * @param string $as The name of the iteration variable
 	 * @param string $relationField The category field for MM relation table
-	 * @param boolean $includeNotInMenu Should pages which are hidden for menu's be included
+	 * @param bool $includeNotInMenu Should pages which are hidden for menu's be included
 	 * @return string
 	 */
 	public function render($categoryUids, $as, $relationField, $includeNotInMenu = FALSE) {
@@ -67,9 +61,7 @@ class PagesViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelpe
 			return '';
 		}
 
-		$this->pageRepository->setIncludeNotInMenu($includeNotInMenu);
-
-		$pages = $this->pageRepository->findByCategories($categoryUids, $relationField, 'pages');
+		$pages = $this->findByCategories($categoryUids, $relationField, 'pages');
 
 		$this->templateVariableContainer->add($as, $pages);
 		$output = $this->renderChildren();

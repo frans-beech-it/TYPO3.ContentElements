@@ -24,6 +24,7 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu\Categories;
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+use PatrickBroens\Contentelements\ViewHelpers\Menu\AbstractMenuViewHelper;
 
 /**
  * A view helper which returns content elements with assigned categories
@@ -43,15 +44,7 @@ namespace PatrickBroens\Contentelements\ViewHelpers\Menu\Categories;
  * Content element with category 1 and 2 assigned
  * </output>
  */
-class ContentViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
-
-	/**
-	 * The content repository
-	 *
-	 * @var \PatrickBroens\Contentelements\Domain\Repository\ContentRepository
-	 * @inject
-	 */
-	protected $contentRepository;
+class ContentViewHelper extends AbstractMenuViewHelper {
 
 	/**
 	 * Render the view helper
@@ -66,7 +59,7 @@ class ContentViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHel
 			return '';
 		}
 
-		$contentElements = $this->contentRepository->findByCategories($categoryUids, $relationField, 'tt_content');
+		$contentElements = $this->findByCategories($categoryUids, $relationField, 'tt_content');
 
 		$this->templateVariableContainer->add($as, $contentElements);
 		$output = $this->renderChildren();
