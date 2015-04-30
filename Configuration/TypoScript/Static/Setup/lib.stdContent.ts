@@ -10,6 +10,5 @@ lib.stdContent {
 	settings < plugin.tx_contentelements.settings
 	settings {
 		defaultHeaderType = {$content.defaultHeaderType}
-		shortcutTables = {$content.shortcut.tables}
 	}
 }

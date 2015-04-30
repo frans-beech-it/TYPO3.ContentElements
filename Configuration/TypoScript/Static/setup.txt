@@ -40,6 +40,13 @@ tt_content {
 	shortcut =< lib.stdContent
 	shortcut {
 		templateName = Shortcut
+
+		# Record insert rendering
+		20 = RECORDS
+		20 {
+			source.field = records
+			tables = {$content.shortcut.tables}
+		}
 	}
 	table =< lib.userContent
 	table {
