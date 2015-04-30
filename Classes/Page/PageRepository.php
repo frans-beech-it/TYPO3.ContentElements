@@ -13,6 +13,8 @@ namespace PatrickBroens\Contentelements\Page;
  *
  * The TYPO3 project - inspiring people to share!
  */
+use TYPO3\CMS\Frontend\Page\PageRepositoryGetPageOverlayHookInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Extend of Page functions, a lot of sql/pages-related functions
