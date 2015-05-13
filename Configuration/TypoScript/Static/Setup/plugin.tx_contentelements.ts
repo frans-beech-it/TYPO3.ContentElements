@@ -31,5 +31,6 @@ plugin.tx_contentelements {
 				linkParams.ATagParams.dataWrap =  class="{$styles.content.imgtext.linkWrap.lightboxCssClass}" rel="{$styles.content.imgtext.linkWrap.lightboxRelAttribute}"
 			}
 		}
+		defaultHeaderType = {$content.defaultHeaderType}
 	}
 }

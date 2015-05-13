@@ -8,7 +8,4 @@ lib.stdContent {
 	templateName = Default
 
 	settings < plugin.tx_contentelements.settings
-	settings {
-		defaultHeaderType = {$content.defaultHeaderType}
-	}
 }
