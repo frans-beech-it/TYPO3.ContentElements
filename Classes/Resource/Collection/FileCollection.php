@@ -27,6 +27,11 @@ namespace PatrickBroens\Contentelements\Resource\Collection;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+/**
+ * Class to collect files from various sources
+ *
+ * Sources can be file references, file collections or folders
+ */
 class FileCollection {
 
 	/**
@@ -59,8 +64,6 @@ class FileCollection {
 
 	/**
 	 * Constructor
-	 *
-	 * @return void
 	 */
 	public function __construct() {
 		$this->fileRepository = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Resource\FileRepository::class);
@@ -69,23 +72,23 @@ class FileCollection {
 	}
 
 	/**
-	 * Get all the files from references, file collections and folders, sorted by property
+	 * Get all the files from relation, file collections and folders, sorted by property
 	 *
-	 * @param string $fileUids The file uids, comma separated
-	 * @param string $referencesUids The references uids, comma separated
+	 * @param int $relationUid The uid of the content element to fetch the files for
+	 * @param string $relationField The field which holds the files
 	 * @param string $fileCollectionUids The file collections uids, comma separated
 	 * @param string $folderIdentifiers The folder identifiers, comma separated
 	 * @param string $sortingProperty The property to sort the files with
 	 * @return array The files
 	 */
 	public function getAllSorted(
-		$fileUids = '',
-		$referencesUids = '',
+		$relationUid = NULL,
+		$relationField = 'media',
 		$fileCollectionUids = '',
 		$folderIdentifiers = '',
 		$sortingProperty = ''
 	) {
-		$this->addAll($fileUids, $referencesUids, $fileCollectionUids, $folderIdentifiers);
+		$this->addAll($relationUid, $relationField, $fileCollectionUids, $folderIdentifiers);
 
 		$this->sort($sortingProperty);
 
@@ -93,74 +96,53 @@ class FileCollection {
 	}
 
 	/**
-	 * Get all the files from references, file collections and folders, in order of incoming values
+	 * Get all the files from relation, file collections and folders, in order of incoming values
 	 *
-	 * @param string $fileUids The file uids, comma separated
-	 * @param string $referencesUids The references uids, comma separated
+	 * @param int $relationUid The uid of the content element to fetch the files for
+	 * @param string $relationField The field which holds the files
 	 * @param string $fileCollectionUids The file collections uids, comma separated
 	 * @param string $folderIdentifiers The folder identifiers, comma separated
 	 * @return array The files
 	 */
-	public function getAll($fileUids, $referencesUids = '', $fileCollectionUids = '', $folderIdentifiers = '') {
-		$this->addAll($fileUids, $referencesUids, $fileCollectionUids, $folderIdentifiers);
+	public function getAll(
+		$relationUid = NULL,
+		$relationField = 'media',
+		$fileCollectionUids = '',
+		$folderIdentifiers = ''
+	) {
+		$this->addAll($relationUid, $relationField, $fileCollectionUids, $folderIdentifiers);
 
 		return $this->files;
 	}
 
 	/**
-	 * Add files to the collection from references, file collections and folders
+	 * Add files to the collection from relation, file collections and folders
 	 *
-	 * @param string $fileUids The file uids, comma separated
-	 * @param string $referencesUids The references uids, comma separated
+	 * @param int $relationUid The uid of the content element to fetch the files for
+	 * @param string $relationField The field which holds the files
 	 * @param string $fileCollectionUids The file collections uids, comma separated
 	 * @param string $folderIdentifiers The folder identifiers, comma separated
 	 * @return void
 	 */
-	public function addAll($fileUids, $referencesUids = '', $fileCollectionUids = '', $folderIdentifiers = '') {
-		$this->addFiles($fileUids);
-		$this->addFilesFromReferences($referencesUids);
+	public function addAll($relationUid = NULL, $relationField = 'media', $fileCollectionUids = '', $folderIdentifiers = '') {
+		$this->addFilesFromRelation($relationUid, $relationField);
 		$this->addFilesFromFileCollections($fileCollectionUids);
 		$this->addFilesFromFolders($folderIdentifiers);
 	}
 
 	/**
-	 * Add files to the collection from multiple UIDs
+	 * Add files to the collection from a relation
 	 *
-	 * @param $fileUids
+	 * @param int $relationUid The uid of the content element to fetch the files for
+	 * @param string $relationField The field which holds the files
 	 * @return void
 	 */
-	public function addFiles($fileUids) {
-		$fileUids = GeneralUtility::trimExplode(',', $fileUids, TRUE);
+	public function addFilesFromRelation($relationUid = NULL, $relationField = 'media') {
+		if ($relationUid && $relationField !== '') {
+			$files = $this->fileRepository->findByRelation('tt_content', $relationField, $relationUid);
 
-		foreach($fileUids as $fileUid) {
-			$this->add($this->fileRepository->findByUid($fileUid));
+			$this->addMultiple($files);
 		}
-	}
-
-	/**
-	 * Add files to the collection from multiple references
-	 *
-	 * @param string $referencesUids The references uids, comma separated
-	 * @return void
-	 */
-	public function addFilesFromReferences($referencesUids) {
-		$referencesUids = GeneralUtility::trimExplode(',', $referencesUids, TRUE);
-
-		foreach($referencesUids as $referenceUid) {
-			$this->addFileFromReference($referenceUid);
-		}
-	}
-
-	/**
-	 * Add file to the collection from one single reference
-	 *
-	 * @param integer $referenceUid The reference uid
-	 * @return void
-	 */
-	public function addFileFromReference($referenceUid) {
-		$fileReference = $this->fileRepository->findFileReferenceByUid($referenceUid);
-
-		$this->add($fileReference);
 	}
 
 	/**
@@ -169,34 +151,41 @@ class FileCollection {
 	 * @param string $fileCollectionUids The file collections uids, comma separated
 	 * @return void
 	 */
-	public function addFilesFromFileCollections($fileCollectionUids) {
-		$fileCollectionUids = GeneralUtility::trimExplode(',', $fileCollectionUids, TRUE);
+	public function addFilesFromFileCollections($fileCollectionUids = '') {
+		$fileCollectionUids = GeneralUtility::intExplode(',', $fileCollectionUids, TRUE);
 
-		foreach($fileCollectionUids as $fileCollectionUid) {
-			$this->addFilesFromFileCollection($fileCollectionUid);
+		if (!empty($fileCollectionUids)) {
+			foreach ($fileCollectionUids as $fileCollectionUid) {
+				$this->addFilesFromFileCollection($fileCollectionUid);
+			}
 		}
 	}
 
 	/**
 	 * Add files to the collection from one single file collection
 	 *
-	 * @param integer $fileCollectionUid The file collections uid
+	 * @param int $fileCollectionUid The file collections uid
 	 * @return void
 	 */
-	public function addFilesFromFileCollection($fileCollectionUid) {
-		try {
-			$fileCollection = $this->fileCollectionRepository->findByUid($fileCollectionUid);
+	public function addFilesFromFileCollection($fileCollectionUid = NULL) {
+		if (!empty($fileCollectionUid)) {
+			try {
+				$fileCollection = $this->fileCollectionRepository->findByUid($fileCollectionUid);
 
-			if ($fileCollection instanceof \TYPO3\CMS\Core\Resource\Collection\AbstractFileCollection) {
-				$fileCollection->loadContents();
-				$files = $fileCollection->getItems();
-				foreach ($files as $file) {
-					$this->add($file);
+				if ($fileCollection instanceof \TYPO3\CMS\Core\Resource\Collection\AbstractFileCollection) {
+					$fileCollection->loadContents();
+					$files = $fileCollection->getItems();
+
+					$this->addMultiple($files);
 				}
+			} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
+				$logger = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Log\LogManager::class)->getLogger();
+				$logger->warning(
+					'The file-collection with uid  "' . $fileCollectionUid
+					. '" could not be found or contents could not be loaded and won\'t be included in frontend output.'
+					. '(' . $e->getMessage() . ')'
+				);
 			}
-		} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
-			$logger = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Log\LogManager::class)->getLogger();
-			$logger->warning('The file-collection with uid  "' . $fileCollectionUid . '" could not be found or contents could not be loaded and won\'t be included in frontend output');
 		}
 	}
 
@@ -225,9 +214,8 @@ class FileCollection {
 				$folder = $this->resourceFactory->getFolderObjectFromCombinedIdentifier($folderIdentifier);
 				if ($folder instanceof \TYPO3\CMS\Core\Resource\Folder) {
 					$files = $folder->getFiles();
-					foreach ($files as $file) {
-						$this->add($file);
-					}
+
+					$this->addMultiple($files);
 				}
 			} catch (\TYPO3\CMS\Core\Resource\Exception $e) {
 				$logger = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Log\LogManager::class)->getLogger();
@@ -245,7 +233,7 @@ class FileCollection {
 	public function sort($sortingProperty = '') {
 		if ($sortingProperty !== '' && count($this->files) > 1) {
 			usort(
-				$fileObjects,
+				$this->files,
 				function(
 					\TYPO3\CMS\Core\Resource\FileInterface $a,
 					\TYPO3\CMS\Core\Resource\FileInterface $b
@@ -266,7 +254,17 @@ class FileCollection {
 	 * @param mixed $file The file object
 	 * @return void
 	 */
-	public function add( $file) {
+	public function add($file) {
 		$this->files[] = $file;
+	}
+
+	/**
+	 * Add multiple file objects to the collection
+	 *
+	 * @param mixed $files The file objects
+	 * @return void
+	 */
+	public function addMultiple($files) {
+		$this->files = array_merge($this->files, $files);
 	}
 }
