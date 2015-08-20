@@ -270,6 +270,7 @@ class FluidTemplateContentObject extends AbstractContentObject {
 	protected function assignContentObjectDataAndCurrent() {
 		$this->view->assign('data', $this->cObj->data);
 		$this->view->assign('current', $this->cObj->data[$this->cObj->currentValKey]);
+		$this->view->assign('parentRecordNumber', $this->cObj->parentRecordNumber);
 	}
 
 	/**

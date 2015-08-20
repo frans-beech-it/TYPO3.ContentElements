@@ -147,6 +147,7 @@ class ContentElementController {
 
 		$this->view->assign('settings', $this->settings);
 		$this->view->assign('data', $this->data);
+		$this->view->assign('parentRecordNumber', $this->contentObject->parentRecordNumber);
 
 		return $this->view->render();
 	}
