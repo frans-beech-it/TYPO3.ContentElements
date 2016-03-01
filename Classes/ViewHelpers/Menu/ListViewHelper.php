@@ -82,12 +82,15 @@ class ListViewHelper extends AbstractMenuViewHelper {
 			}
 		}
 
-		$pages = $this->pageRepository->getMenuList(
-			$pageUids,
-			'*',
-			'',
-			$this->getPageConstraints($includeNotInMenu, $includeMenuSeparator)
-		);
+		$pages = [];
+		foreach ($pageUids as $pageUid) {
+			$pages += $this->pageRepository->getMenuList(
+				[$pageUid],
+				'*',
+				'',
+				$this->getPageConstraints($includeNotInMenu, $includeMenuSeparator)
+			);
+		}
 
 		$output = '';
 

@@ -25,7 +25,7 @@ abstract class AbstractMenuViewHelper extends AbstractFrontendViewHelper {
 	/**
 	 * The page repository
 	 *
-	 * @var \TYPO3\CMS\Frontend\Page\PageRepository
+	 * @var \PatrickBroens\Contentelements\Page\PageRepository
 	 */
 	protected $pageRepository;
 
